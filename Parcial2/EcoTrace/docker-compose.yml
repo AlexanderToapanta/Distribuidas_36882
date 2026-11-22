@@ -1,0 +1,51 @@
+name: ecotrace
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ecotrace
+      POSTGRES_USER: ecotrace
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ecotrace_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecotrace -d ecotrace"]
+      interval: 4s
+      timeout: 3s
+      retries: 15
+  app:
+    build: .
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    ports:
+      - "8001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+  reverb:
+    build: .
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080 --debug
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+  tcp:
+    build: .
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    command: php scripts/servidor-tcp.php
+    ports:
+      - "127.0.0.1:9000:9000"
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  ecotrace_db:

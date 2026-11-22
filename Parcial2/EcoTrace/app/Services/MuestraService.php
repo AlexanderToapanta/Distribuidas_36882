@@ -10,13 +10,50 @@ class MuestraService
 {
     public function __construct(private ActualizacionService $actualizaciones) {}
 
-    public function crear(array $datos): Muestra
-    {
-        $datos['codigo'] = Str::upper(trim($datos['codigo']));
-        $muestra = Muestra::create($datos);
-        $this->actualizaciones->notificar('Muestra '.$muestra->codigo.' registrada');
+   
+public function crear(array $datos, ?int $idReservado = null): Muestra
+{
+    unset($datos['codigo']);
+
+    $muestra = DB::transaction(function () use ($datos, $idReservado) {
+
+        if ($idReservado !== null) {
+            // Utilizar el ID reservado en el formulario.
+            $muestra = new Muestra($datos);
+            $muestra->id = $idReservado;
+
+            $muestra->codigo = 'M-' . str_pad(
+                (string) $muestra->id,
+                3,
+                '0',
+                STR_PAD_LEFT
+            );
+
+            $muestra->save();
+        } else {
+            // Compatibilidad con comandos y pruebas existentes.
+            $muestra = Muestra::create($datos);
+
+            $muestra->codigo = 'M-' . str_pad(
+                (string) $muestra->id,
+                3,
+                '0',
+                STR_PAD_LEFT
+            );
+
+            $muestra->save();
+        }
+
         return $muestra;
-    }
+    });
+
+    $this->actualizaciones->notificar(
+        'Muestra ' . $muestra->codigo . ' registrada'
+    );
+
+    return $muestra;
+}
+
 
     public function consultar(string $codigo): ?Muestra
     {

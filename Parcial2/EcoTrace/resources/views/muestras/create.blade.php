@@ -5,7 +5,29 @@
 <form class="card" action="{{ route('muestras.store') }}" method="POST">
   @csrf
   <div class="formgrid">
-    <div class="field"><label for="codigo">Código único</label><input id="codigo" name="codigo" required maxlength="30" placeholder="M-006" value="{{ old('codigo') }}"></div>
+   
+<div class="field">
+    <label for="codigo">Código único (automático)</label>
+
+    <input
+        id="codigo"
+        type="text"
+        value="{{ $codigo }}"
+        readonly
+        style="background:#f2f5f3;cursor:not-allowed;"
+    >
+
+    <input
+        type="hidden"
+        name="reserva"
+        value="{{ $reserva }}"
+    >
+
+    <div class="muted small">
+        Código reservado automáticamente por EcoTrace.
+    </div>
+</div>
+
     <div class="field"><label for="tipo">Tipo de muestra</label><select id="tipo" name="tipo" required>@foreach(['Agua','Suelo','Aire','Vegetación'] as $tipo)<option value="{{ $tipo }}" @selected(old('tipo') === $tipo)>{{ $tipo }}</option>@endforeach</select></div>
     <div class="field"><label for="origen">Origen</label><input id="origen" name="origen" required maxlength="120" placeholder="Río, bosque, quebrada..." value="{{ old('origen') }}"></div>
     <div class="field"><label for="lugar_recoleccion">Lugar de recolección</label><input id="lugar_recoleccion" name="lugar_recoleccion" required maxlength="120" placeholder="Zamora, Loja..." value="{{ old('lugar_recoleccion') }}"></div>
